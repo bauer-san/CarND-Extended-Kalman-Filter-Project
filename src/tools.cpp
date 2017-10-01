@@ -48,27 +48,23 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	float vy = x_state(3);
 
     //check division by zero
-	if (abs(px) < 0.01) {
+	if (abs(px) < 0.0001) {
 	  px = 0.01;
 	}
-	if (abs(py) < 0.01) {
+	if (abs(py) < 0.0001) {
 	  py = 0.01;
 	}
-	//compute the Jacobian matrix
-      Hj(0,0) = px / (sqrt(pow(px,2)+pow(py,2)));
-      Hj(0,1) = py / (sqrt(pow(px,2)+pow(py,2)));
-      Hj(0,2) = 0.;
-      Hj(0,3) = 0.;
-    
-      Hj(1,0) = -py / (pow(px,2)+pow(py,2));
-      Hj(1,1) = px / (pow(px,2)+pow(py,2));
-      Hj(1,2) = 0;
-      Hj(1,3) = 0;
-    
-      Hj(2,0) = py*(vx*py-vy*px) / pow((pow(px,2)+pow(py,2)), 3/2);
-      Hj(2,1) = px*(vy*px-vx*py) / pow((pow(px,2)+pow(py,2)), 3/2);
-      Hj(2,2) = px / (sqrt(pow(px,2)+pow(py,2)));
-      Hj(2,3) = py / (sqrt(pow(px,2)+pow(py,2)));
 	
+    // Lesson 5, Unit 19
+	  	//pre-compute a set of terms to avoid repeated calculation
+	float c1 = px*px+py*py;
+	float c2 = sqrt(c1);
+	float c3 = (c1*c2);
+	
+		//compute the Jacobian matrix
+	Hj << (px/c2), (py/c2), 0, 0,
+		  -(py/c1), (px/c1), 0, 0,
+		  py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
+
 	return Hj;
 }

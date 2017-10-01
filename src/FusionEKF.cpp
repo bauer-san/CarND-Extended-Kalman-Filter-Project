@@ -54,22 +54,27 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // Initialize state using the initial RADAR measurements converted from polar to cartesian coordinates
-	  ekf_.x_ << measurement_pack.raw_measurements_[0]*cos(measurement_pack.raw_measurements_[1]),
-				 measurement_pack.raw_measurements_[0]*sin(measurement_pack.raw_measurements_[1]),
-				 5,
-				 0;
+	  ekf_.x_ << measurement_pack.raw_measurements_[0] * cos(measurement_pack.raw_measurements_[1]),
+				 measurement_pack.raw_measurements_[0] * sin(measurement_pack.raw_measurements_[1]),
+                 measurement_pack.raw_measurements_[2] * cos(measurement_pack.raw_measurements_[1]),
+                 measurement_pack.raw_measurements_[2] * sin(measurement_pack.raw_measurements_[1]);
+;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // Initialize state using the initial LASER measurements
 	  ekf_.x_ << measurement_pack.raw_measurements_[0],
 				 measurement_pack.raw_measurements_[1], 
-				 5,
+				 0,
 				 0;
     }
 
     //Initialize the state covariance matrix, P
 	ekf_.P_ = MatrixXd(4,4);
-
+	ekf_.P_ << 1., 0., 0., 0., // We are *SO* sure of the initial state
+	           0., 1., 0., 0.,
+	           0., 0., 1., 0.,
+	           0., 0., 0., 1.;
+	
     noise_ax = 9;
     noise_ay = 9;
 	
@@ -96,9 +101,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 			 0, 0, 1, 0,
 			 0, 0, 0, 1;
   //2. Set the process covariance matrix Q
-  float dt4 = pow(dt,4)/4;
-  float dt3 = pow(dt,3)/2;
-  float dt2 = pow(dt,2);
+  float dt2 = dt*dt;    //dt^2
+  float dt3 = dt2*dt/2; //dt^3/2
+  float dt4 = dt3*dt/2; //dt^4/4
 
   ekf_.Q_ = MatrixXd(4,4);
   ekf_.Q_ << dt4*noise_ax,     0,              dt3*noise_ax,    0,

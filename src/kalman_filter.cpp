@@ -30,9 +30,9 @@ void KalmanFilter::Update(const VectorXd &z) {
   VectorXd z_pred = H_ * x_;
   VectorXd y = z - z_pred;
   MatrixXd Ht = H_.transpose();
-  MatrixXd S = H_ * P_ * Ht + R_;
+  MatrixXd PHt = P_ * Ht;  
+  MatrixXd S = H_ * PHt + R_;
   MatrixXd Si = S.inverse();
-  MatrixXd PHt = P_ * Ht;
   MatrixXd K = PHt * Si;
 //std::cout << "\nLASER y:" << y << std::endl;
   //new estimate
@@ -64,10 +64,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   VectorXd y = z - z_pred;
 
   //normalize the theta error, y(1), to be in range (-pi, pi)
-  if (y(1) > M_PI) {
+  while (y(1) > M_PI) {
     y(1) = -2.*M_PI + y(1);
   }
-  if (y(1) < -M_PI) {
+  while (y(1) < -M_PI) {
     y(1) = 2.*M_PI + y(1);
   }
 
